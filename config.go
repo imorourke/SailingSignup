@@ -125,7 +125,7 @@ func (config ProgramConfig) getValidSheetEmails(ctx context.Context, client *htt
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	readRange := "A:C"
+	readRange := "A:D"
 	resp, err := srv.Spreadsheets.Values.Get(config.AllowedUsersSheetID, readRange).Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
@@ -134,12 +134,16 @@ func (config ProgramConfig) getValidSheetEmails(ctx context.Context, client *htt
 	users := map[string]UserEntry{}
 
 	for _, row := range resp.Values {
-		emails := strings.ToLower(strings.TrimSpace(row[0].(string)))
-		name := strings.TrimSpace(row[1].(string))
-		membership_year, err := strconv.Atoi(strings.TrimSpace(row[2].(string)))
+		first_name := strings.TrimSpace(row[0].(string))
+		last_name := strings.TrimSpace(row[1].(string))
+		emails := strings.ToLower(strings.TrimSpace(row[2].(string)))
+		membership_year, err := strconv.Atoi(strings.TrimSpace(row[3].(string)))
+
 		if err != nil {
 			log.Fatalf("Unable to convert membership year for %v", row)
 		}
+
+		name := strings.TrimSpace(fmt.Sprintf("%v %v", first_name, last_name[:1]))
 
 		if membership_year < config.RentalMembershipYear {
 			log.Printf("Skipping %v due to membership year %v < %v", name, membership_year, config.RentalMembershipYear)
